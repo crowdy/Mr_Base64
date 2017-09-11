@@ -15,5 +15,5 @@ This program allows you to </br>
 
 and 
 
-<img src='https://imgur.com/lVLTgPk' />
+<img src='https://i.imgur.com/lVLTgPk.png' />
 * added by crowdy
