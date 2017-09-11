@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Windows.Forms;
 
@@ -71,14 +73,14 @@ namespace B64ToImage
         {
             OpenFileDialog o = new OpenFileDialog();
             if (o.ShowDialog() == DialogResult.OK)
-                txbxPathOfFile.Text = o.FileName;
+                tbPathOfFile.Text = o.FileName;
         }
 
         private void txbxPathOfFile_TextChanged(object sender, EventArgs e)
         {
-            if (File.Exists(txbxPathOfFile.Text))
+            if (File.Exists(tbPathOfFile.Text))
             {
-                string p = Fileto64(txbxPathOfFile.Text);
+                string p = Fileto64(tbPathOfFile.Text);
 
                 if (p != null)
                 {
@@ -86,7 +88,9 @@ namespace B64ToImage
                     SetNotf("Loaded Successfully");
                     try
                     {
-                        pictureBoxTo64.Image = Image.FromFile(txbxPathOfFile.Text);
+                        var img = Image.FromFile(tbPathOfFile.Text);
+                        pictureBoxTo64.Image = new Bitmap(img);
+
                     }
                     catch { }
                 }
@@ -174,6 +178,137 @@ namespace B64ToImage
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             new FrmAbout().Show();
+        }
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBoxTo64_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnResourceUrlLoad_Click(object sender, EventArgs e)
+        {
+            this.ProcessFromImageUri(this.tbResourceUrl.Text);
+        }
+
+        /// <summary>
+        /// this returns noting
+        /// </summary>
+        /// <param name="imageUrl"></param>
+        public void ProcessFromImageUri(string imageUrl)
+        {
+            using (WebClient client = new WebClient())
+            {
+                string filename = null;
+                Uri uri = new Uri(imageUrl);
+                if (uri.IsFile)
+                {
+                    filename = @"c:\temp\" + System.IO.Path.GetFileName(uri.LocalPath);
+                    client.DownloadFile(uri, filename);
+                    //OR 
+                    // client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
+                }
+                else
+                {
+                    filename = @"c:\temp\temp.png";
+                    this.SaveImage(uri.ToString(), filename, ImageFormat.Png);
+                }
+
+                if (File.Exists(filename))
+                {
+                    string p = Fileto64(filename);
+
+                    if (p != null)
+                    {
+                        richTextBox1.Text = p;
+                        SetNotf("Loaded Successfully");
+                        try
+                        {
+                            if (pictureBoxTo64.Image != null)
+                            {
+                                pictureBoxTo64.Image.Dispose();
+                                pictureBoxTo64.Image = null;
+                            }
+
+                            var img = Image.FromFile(filename);
+                            pictureBoxTo64.Image = new Bitmap(img);
+                            img.Dispose();
+                        }
+                        catch { }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("file not downloaded.");
+                }
+
+            }
+
+        }
+
+        public void SaveImage(string imageUrl, string filename, ImageFormat format)
+        {
+
+            Bitmap bitmap;
+            using (WebClient client = new WebClient())
+            using (Stream stream = client.OpenRead(imageUrl))
+            using (Image imgSrc = Image.FromStream(stream))
+            {
+                bitmap = new Bitmap(imgSrc);
+                using (bitmap)
+                    bitmap.Save(filename, format);
+            }
+        }
+
+        private void btnLoadFromClipboard_Click(object sender, EventArgs e)
+        {
+
+            if (Clipboard.GetDataObject() != null)
+            {
+                IDataObject data = Clipboard.GetDataObject();
+                if (data.GetDataPresent(DataFormats.Bitmap))
+                {
+                    Image image = (Image)data.GetData(DataFormats.Bitmap, true);
+                    string filename = @"c:\temp\temp.png";
+                    image.Save(filename, ImageFormat.Png);
+
+                    if (File.Exists(filename))
+                    {
+                        string p = Fileto64(filename);
+                        richTextBox1.Text = p;
+                        SetNotf("Loaded Successfully");
+                    }
+                    pictureBoxTo64.Image = new Bitmap(image);
+
+                }
+                else if (data.GetDataPresent(DataFormats.Text))
+                {
+                    var uriName = Clipboard.GetText();
+                    Uri uriResult;
+                    bool result = Uri.TryCreate(uriName, UriKind.Absolute, out uriResult) && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+                    if (result == true)
+                    {
+
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("no invalid data");
+                }
+
+            }
+
         }
     }
 }

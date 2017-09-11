@@ -12,3 +12,8 @@ This program allows you to </br>
 
 <h2>appearance</h2>
 <img src='http://i.imgur.com/rR9Ot7u.png' />
+
+and 
+
+<img src='https://imgur.com/lVLTgPk' />
+* added by crowdy
